@@ -5,7 +5,7 @@
 
 This Chrome extension scrapes all links from the current webpage and allows you to:
 - Copy them to clipboard
-- Download them as a `.txt` file
+- Download them as a `.csv` file
 
 ## 🧩 Features
 - Extract all anchor (`<a>`) links
