@@ -23,4 +23,12 @@ https://chromewebstore.google.com/detail/link-inspector/mhddppopjnmclolaonnimfen
 5. Select the `/src` folder of this project
 
 ## 📁 Folder Structure
+src/  
+├── manifest.json # Chrome extension manifest  
+├── popup.html # UI  
+└── popup.js # UI logic  
+images/  
 
+## 📄 License
+
+MIT — free to use and modify.
