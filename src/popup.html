@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Link Extractor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 10px;
+            background-color: #f4f4f4;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .copyBtn {
+            font-size: 10px;
+            padding: 2px 5px;
+            margin-left: 10px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+        }
+
+        .copyBtn:hover {
+            background-color: #0056b3;
+        }
+
+        #exportBtn {
+            display: block;
+            margin: 10px 0;
+            padding: 5px 10px;
+            font-size: 14px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        #exportBtn:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <h2 id="title">Links on This Page</h2>
+    <ul id="linkList"></ul>
+    <button id="exportBtn">Export All Links</button>
+    <script src="popup.js"></script>
+</body>
+</html>
