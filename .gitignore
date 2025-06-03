@@ -1,0 +1,21 @@
+# Node / npm (only needed if using Node tooling)
+node_modules/
+dist/
+build/
+*.log
+
+# OS-generated
+.DS_Store
+Thumbs.db
+
+# Editor / IDE configs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# ZIPs or packaged releases
+*.zip
+
+# Chrome Extension build cache (optional)
+.crx/
