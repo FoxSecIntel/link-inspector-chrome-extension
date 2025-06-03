@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Link Inspector",
+  "version": "1.0.1",
+  "description": "Extract and display all href links on the current webpage.",
+   "permissions": [
+    "scripting",
+    "activeTab"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "images/icon128.png"
+  }
+}
