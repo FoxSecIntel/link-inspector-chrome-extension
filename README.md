@@ -1,3 +1,6 @@
+![Version](https://img.shields.io/badge/version-1.0.0-blue)
+
+
 # 🔗 Chrome Link Inspector
 
 This Chrome extension scrapes all links from the current webpage and allows you to:
