@@ -17,7 +17,12 @@ This Chrome extension scrapes all links from the current webpage and allows you 
 
 https://chromewebstore.google.com/detail/link-inspector/mhddppopjnmclolaonnimfenhfepjmpd
 
-## 🚀 Installation
+## 🚀 Installation - Option 1  
+https://chromewebstore.google.com/detail/link-inspector/mhddppopjnmclolaonnimfenhfepjmpd
+
+1. Go to the Chrome Web Store and presset install !
+
+## 🚀 Installation - Option 2
 
 1. Clone or download this repo
 2. Open Chrome and go to `chrome://extensions/`
