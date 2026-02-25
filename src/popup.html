@@ -1,70 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Link Extractor</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 10px;
-            background-color: #f4f4f4;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Link Inspector</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 10px;
+      background: #f4f4f4;
+      width: 420px;
+      max-height: 560px;
+      overflow: auto;
+    }
 
-        ul {
-            list-style-type: none;
-            padding: 0;
-        }
+    h2 { margin: 0 0 10px 0; font-size: 16px; }
 
-        li {
-            margin-bottom: 10px;
-        }
+    .controls {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
 
-        a {
-            color: #007bff;
-            text-decoration: none;
-        }
+    button {
+      padding: 6px 10px;
+      font-size: 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      color: white;
+      background: #007bff;
+    }
 
-        a:hover {
-            text-decoration: underline;
-        }
+    button:hover { background: #0056b3; }
 
-        .copyBtn {
-            font-size: 10px;
-            padding: 2px 5px;
-            margin-left: 10px;
-            cursor: pointer;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 3px;
-        }
+    #exportCsvBtn { background: #28a745; }
+    #exportCsvBtn:hover { background: #218838; }
 
-        .copyBtn:hover {
-            background-color: #0056b3;
-        }
+    #exportTxtBtn { background: #6f42c1; }
+    #exportTxtBtn:hover { background: #59359a; }
 
-        #exportBtn {
-            display: block;
-            margin: 10px 0;
-            padding: 5px 10px;
-            font-size: 14px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-        }
+    #copyAllBtn { background: #fd7e14; }
+    #copyAllBtn:hover { background: #cc650f; }
 
-        #exportBtn:hover {
-            background-color: #218838;
-        }
-    </style>
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    li {
+      margin-bottom: 8px;
+      background: white;
+      border-radius: 4px;
+      padding: 6px;
+      border: 1px solid #e6e6e6;
+    }
+
+    .row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .link-text {
+      word-break: break-all;
+      color: #0b63c4;
+      text-decoration: none;
+      flex: 1;
+      font-size: 12px;
+    }
+
+    .copy-btn {
+      min-width: 52px;
+      background: #444;
+      font-size: 11px;
+      padding: 4px 6px;
+    }
+
+    .copy-btn:hover { background: #222; }
+
+    .meta {
+      color: #666;
+      font-size: 11px;
+      margin-top: 6px;
+    }
+
+    .empty {
+      color: #444;
+      background: #fff;
+      border: 1px dashed #ccc;
+      padding: 8px;
+      border-radius: 4px;
+    }
+  </style>
 </head>
 <body>
-    <h2 id="title">Links on This Page</h2>
-    <ul id="linkList"></ul>
-    <button id="exportBtn">Export All Links</button>
-    <script src="popup.js"></script>
+  <h2 id="title">Links on This Page</h2>
+
+  <div class="controls">
+    <button id="copyAllBtn">Copy All</button>
+    <button id="exportTxtBtn">Export TXT</button>
+    <button id="exportCsvBtn">Export CSV</button>
+  </div>
+
+  <ul id="linkList"></ul>
+
+  <script src="popup.js"></script>
 </body>
 </html>
