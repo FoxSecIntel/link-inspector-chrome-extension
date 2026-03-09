@@ -25,7 +25,22 @@ function download(filename, content, mimeType) {
   URL.revokeObjectURL(url);
 }
 
-function renderLinks(links) {
+function normaliseHost(host) {
+  return String(host || '').toLowerCase().replace(/^www\./, '');
+}
+
+function isExternalLink(link, pageHost) {
+  try {
+    const linkHost = normaliseHost(new URL(link).hostname);
+    const baseHost = normaliseHost(pageHost);
+    if (!linkHost || !baseHost) return false;
+    return !(linkHost === baseHost || linkHost.endsWith(`.${baseHost}`));
+  } catch {
+    return false;
+  }
+}
+
+function renderLinks(links, pageHost) {
   const linkList = document.getElementById('linkList');
   const title = document.getElementById('title');
   linkList.innerHTML = '';
@@ -52,6 +67,10 @@ function renderLinks(links) {
 
   links.forEach((link) => {
     const li = document.createElement('li');
+    if (isExternalLink(link, pageHost)) {
+      li.classList.add('external-link');
+    }
+
     const row = document.createElement('div');
     row.className = 'row';
 
@@ -124,7 +143,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const links = results?.[0]?.result || [];
-        renderLinks(links);
+        const pageUrl = tabs?.[0]?.url || '';
+        const pageHost = (() => {
+          try {
+            return new URL(pageUrl).hostname;
+          } catch {
+            return '';
+          }
+        })();
+
+        renderLinks(links, pageHost);
         setupExportButtons(links);
       },
     );
