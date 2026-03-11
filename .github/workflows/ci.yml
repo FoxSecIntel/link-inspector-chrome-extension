@@ -1,0 +1,20 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate-extension:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate manifest JSON
+        run: |
+          python -m json.tool src/manifest.json > /dev/null
+
+      - name: Basic JavaScript syntax check
+        run: |
+          node --check src/popup.js
