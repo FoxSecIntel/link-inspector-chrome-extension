@@ -99,6 +99,9 @@ function applyFilter(linkObjs, filterMode) {
   if (filterMode === 'external') {
     return linkObjs.filter((l) => l.isHttpLike && l.isExternal);
   }
+  if (filterMode === 'risky') {
+    return linkObjs.filter((l) => l.isRisky);
+  }
   return linkObjs;
 }
 
