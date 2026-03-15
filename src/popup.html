@@ -16,11 +16,24 @@
 
     h2 { margin: 0 0 10px 0; font-size: 16px; }
 
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+      margin-bottom: 10px;
+      background: #fff;
+      border: 1px solid #e5e5e5;
+      border-radius: 6px;
+      padding: 8px;
+      font-size: 12px;
+    }
+
     .controls {
       display: flex;
       gap: 8px;
       margin-bottom: 10px;
       flex-wrap: wrap;
+      align-items: center;
     }
 
     button {
@@ -34,6 +47,11 @@
     }
 
     button:hover { background: #0056b3; }
+
+    .active-filter {
+      outline: 2px solid #004a99;
+      box-shadow: 0 0 0 2px rgba(0, 74, 153, 0.15);
+    }
 
     #exportCsvBtn { background: #28a745; }
     #exportCsvBtn:hover { background: #218838; }
@@ -87,6 +105,30 @@
 
     .copy-btn:hover { background: #222; }
 
+    .sort-label {
+      font-size: 12px;
+      color: #333;
+    }
+
+    #sortMode {
+      font-size: 12px;
+      padding: 4px 6px;
+      border: 1px solid #cfcfcf;
+      border-radius: 4px;
+      background: #fff;
+    }
+
+    li.risky-link {
+      background: #ffecec;
+      border-color: #ffc7c7;
+    }
+
+    .risk-note {
+      margin-top: 6px;
+      font-size: 11px;
+      color: #a10000;
+    }
+
     .meta {
       color: #666;
       font-size: 11px;
@@ -105,10 +147,26 @@
 <body>
   <h2 id="title">Links on This Page</h2>
 
+  <div id="summary" class="summary"></div>
+
   <div class="controls">
-    <button id="copyAllBtn">Copy All</button>
+    <button id="copyAllBtn">Copy Visible</button>
     <button id="exportTxtBtn">Export TXT</button>
     <button id="exportCsvBtn">Export CSV</button>
+  </div>
+
+  <div class="controls filter-controls">
+    <button data-filter="all" class="active-filter">All</button>
+    <button data-filter="internal">Internal</button>
+    <button data-filter="external">External</button>
+
+    <label for="sortMode" class="sort-label">Sort:</label>
+    <select id="sortMode">
+      <option value="first">First seen</option>
+      <option value="alphabetical">Alphabetical</option>
+      <option value="domain">Domain</option>
+      <option value="pathlen">Path length</option>
+    </select>
   </div>
 
   <ul id="linkList"></ul>

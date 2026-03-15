@@ -1,8 +1,9 @@
 function extractLinks() {
-  const raw = Array.from(document.querySelectorAll('a')).map((a) => a.href || '').filter(Boolean);
-  const filtered = raw.filter((u) => /^https?:\/\//i.test(u));
-  const unique = Array.from(new Set(filtered));
-  return unique;
+  const raw = Array.from(document.querySelectorAll('a'))
+    .map((a) => (a.href || '').trim())
+    .filter(Boolean);
+
+  return Array.from(new Set(raw));
 }
 
 function escapeCsv(value) {
@@ -29,34 +30,139 @@ function normaliseHost(host) {
   return String(host || '').toLowerCase().replace(/^www\./, '');
 }
 
-function isExternalLink(link, pageHost) {
+function classifyLink(link, pageHost) {
+  let parsed = null;
   try {
-    const linkHost = normaliseHost(new URL(link).hostname);
-    const baseHost = normaliseHost(pageHost);
-    if (!linkHost || !baseHost) return false;
-    return !(linkHost === baseHost || linkHost.endsWith(`.${baseHost}`));
+    parsed = new URL(link);
   } catch {
-    return false;
+    return {
+      url: link,
+      scheme: 'invalid',
+      host: '',
+      isHttpLike: false,
+      isExternal: false,
+      isRisky: true,
+      riskLabel: 'Invalid URL',
+    };
   }
+
+  const scheme = parsed.protocol.replace(':', '').toLowerCase();
+  const host = normaliseHost(parsed.hostname);
+  const baseHost = normaliseHost(pageHost);
+  const isHttpLike = scheme === 'http' || scheme === 'https';
+
+  const isExternal = isHttpLike && !!host && !!baseHost
+    ? !(host === baseHost || host.endsWith(`.${baseHost}`))
+    : false;
+
+  let isRisky = false;
+  let riskLabel = '';
+
+  if (scheme === 'http') {
+    isRisky = true;
+    riskLabel = 'Insecure HTTP';
+  } else if (!isHttpLike) {
+    isRisky = true;
+    riskLabel = `Non-web scheme: ${scheme}`;
+  }
+
+  return {
+    url: link,
+    scheme,
+    host,
+    isHttpLike,
+    isExternal,
+    isRisky,
+    riskLabel,
+  };
 }
 
-function renderLinks(links, pageHost) {
+function getSummary(linkObjs) {
+  const httpLike = linkObjs.filter((l) => l.isHttpLike);
+  const internal = httpLike.filter((l) => !l.isExternal);
+  const external = httpLike.filter((l) => l.isExternal);
+  const uniqueDomains = new Set(httpLike.map((l) => l.host).filter(Boolean));
+
+  return {
+    total: linkObjs.length,
+    internal: internal.length,
+    external: external.length,
+    risky: linkObjs.filter((l) => l.isRisky).length,
+    uniqueDomains: uniqueDomains.size,
+  };
+}
+
+function applyFilter(linkObjs, filterMode) {
+  if (filterMode === 'internal') {
+    return linkObjs.filter((l) => l.isHttpLike && !l.isExternal);
+  }
+  if (filterMode === 'external') {
+    return linkObjs.filter((l) => l.isHttpLike && l.isExternal);
+  }
+  return linkObjs;
+}
+
+function applySort(linkObjs, sortMode) {
+  const out = [...linkObjs];
+
+  if (sortMode === 'alphabetical') {
+    out.sort((a, b) => a.url.localeCompare(b.url));
+  } else if (sortMode === 'domain') {
+    out.sort((a, b) => {
+      const h = (a.host || '').localeCompare(b.host || '');
+      if (h !== 0) return h;
+      return a.url.localeCompare(b.url);
+    });
+  } else if (sortMode === 'pathlen') {
+    out.sort((a, b) => {
+      const aPath = (() => {
+        try { return new URL(a.url).pathname.length; } catch { return 0; }
+      })();
+      const bPath = (() => {
+        try { return new URL(b.url).pathname.length; } catch { return 0; }
+      })();
+      return bPath - aPath;
+    });
+  }
+
+  return out;
+}
+
+function setActiveFilterButton(mode) {
+  document.querySelectorAll('[data-filter]').forEach((btn) => {
+    btn.classList.toggle('active-filter', btn.getAttribute('data-filter') === mode);
+  });
+}
+
+function renderSummary(summary) {
+  const summaryEl = document.getElementById('summary');
+  summaryEl.innerHTML = `
+    <div><strong>Total:</strong> ${summary.total}</div>
+    <div><strong>Internal:</strong> ${summary.internal}</div>
+    <div><strong>External:</strong> ${summary.external}</div>
+    <div><strong>Risky:</strong> ${summary.risky}</div>
+    <div><strong>Unique domains:</strong> ${summary.uniqueDomains}</div>
+  `;
+}
+
+function renderLinks(linkObjs, pageHost, filterMode, sortMode) {
   const linkList = document.getElementById('linkList');
   const title = document.getElementById('title');
   linkList.innerHTML = '';
 
-  title.textContent = `Links on This Page (${links.length} unique)`;
+  const filteredSorted = applySort(applyFilter(linkObjs, filterMode), sortMode);
+  title.textContent = `Links on This Page (${filteredSorted.length} shown)`;
 
-  if (links.length === 0) {
+  if (filteredSorted.length === 0) {
     const div = document.createElement('div');
     div.className = 'empty';
-    div.textContent = 'No HTTP(S) links found on this page.';
+    div.textContent = 'No links match the current filter.';
     linkList.appendChild(div);
-    return;
+    return filteredSorted;
   }
 
-  const first = links[0];
-  const last = links[links.length - 1];
+  const first = filteredSorted[0]?.url;
+  const last = filteredSorted[filteredSorted.length - 1]?.url;
 
   const meta = document.createElement('div');
   meta.className = 'meta';
@@ -65,30 +171,30 @@ function renderLinks(links, pageHost) {
 
   const fragment = document.createDocumentFragment();
 
-  links.forEach((link) => {
+  filteredSorted.forEach((linkObj) => {
     const li = document.createElement('li');
-    if (isExternalLink(link, pageHost)) {
-      li.classList.add('external-link');
-    }
+
+    if (linkObj.isExternal) li.classList.add('external-link');
+    if (linkObj.isRisky) li.classList.add('risky-link');
 
     const row = document.createElement('div');
     row.className = 'row';
 
     const a = document.createElement('a');
     a.className = 'link-text';
-    a.href = link;
+    a.href = linkObj.url;
     a.target = '_blank';
     a.rel = 'noopener noreferrer';
-    a.textContent = link;
+    a.textContent = linkObj.url;
 
     const btn = document.createElement('button');
     btn.className = 'copy-btn';
     btn.type = 'button';
     btn.textContent = 'Copy';
-    btn.setAttribute('aria-label', `Copy ${link}`);
+    btn.setAttribute('aria-label', `Copy ${linkObj.url}`);
     btn.addEventListener('click', async () => {
       try {
-        await navigator.clipboard.writeText(link);
+        await navigator.clipboard.writeText(linkObj.url);
       } catch (err) {
         console.error('Clipboard copy failed:', err);
       }
@@ -97,31 +203,52 @@ function renderLinks(links, pageHost) {
     row.appendChild(a);
     row.appendChild(btn);
     li.appendChild(row);
+
+    if (linkObj.isRisky) {
+      const risk = document.createElement('div');
+      risk.className = 'risk-note';
+      risk.textContent = `⚠ ${linkObj.riskLabel}`;
+      li.appendChild(risk);
+    }
+
     fragment.appendChild(li);
   });
 
   linkList.appendChild(fragment);
+  return filteredSorted;
 }
 
-function setupExportButtons(links) {
+function setupExportButtons(getVisibleLinks) {
   const copyAllBtn = document.getElementById('copyAllBtn');
   const exportTxtBtn = document.getElementById('exportTxtBtn');
   const exportCsvBtn = document.getElementById('exportCsvBtn');
 
   copyAllBtn.onclick = async () => {
+    const visible = getVisibleLinks();
     try {
-      await navigator.clipboard.writeText(links.join('\n'));
+      await navigator.clipboard.writeText(visible.map((l) => l.url).join('\n'));
     } catch (err) {
       console.error('Copy all failed:', err);
     }
   };
 
   exportTxtBtn.onclick = () => {
-    download('links.txt', `${links.join('\n')}\n`, 'text/plain');
+    const visible = getVisibleLinks();
+    download('links.txt', `${visible.map((l) => l.url).join('\n')}\n`, 'text/plain');
   };
 
   exportCsvBtn.onclick = () => {
-    const rows = ['url', ...links.map((u) => escapeCsv(u))];
+    const visible = getVisibleLinks();
+    const rows = ['url,scheme,host,external,risky'];
+    visible.forEach((l) => {
+      rows.push([
+        escapeCsv(l.url),
+        escapeCsv(l.scheme),
+        escapeCsv(l.host),
+        escapeCsv(l.isExternal),
+        escapeCsv(l.isRisky),
+      ].join(','));
+    });
     download('links.csv', `${rows.join('\n')}\n`, 'text/csv');
   };
 }
@@ -152,8 +279,33 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         })();
 
-        renderLinks(links, pageHost);
-        setupExportButtons(links);
+        const linkObjs = links.map((l) => classifyLink(l, pageHost));
+        let filterMode = 'all';
+        let sortMode = 'first';
+        let visibleLinks = [];
+
+        const rerender = () => {
+          renderSummary(getSummary(linkObjs));
+          visibleLinks = renderLinks(linkObjs, pageHost, filterMode, sortMode);
+          setActiveFilterButton(filterMode);
+        };
+
+        setupExportButtons(() => visibleLinks);
+
+        document.querySelectorAll('[data-filter]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            filterMode = btn.getAttribute('data-filter') || 'all';
+            rerender();
+          });
+        });
+
+        const sortSelect = document.getElementById('sortMode');
+        sortSelect.addEventListener('change', () => {
+          sortMode = sortSelect.value;
+          rerender();
+        });
+
+        rerender();
       },
     );
   });
