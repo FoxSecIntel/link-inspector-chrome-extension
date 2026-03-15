@@ -4,27 +4,53 @@
 
 Link Inspector is a lightweight Chrome extension for fast link triage on the active tab.
 
-It extracts unique HTTP(S) URLs, lets you copy results quickly, and exports clean TXT or CSV output for investigation workflows.
+It extracts unique links, highlights external and risky links, and exports clean evidence for analyst workflows.
 
 ## Why this tool exists
 
 During web investigations, analysts often need to:
-- quickly enumerate all links on a page
-- remove duplicates and noise
-- pivot into domain analysis
-- export evidence into case notes
+- quickly enumerate links on a page
+- identify external destinations
+- spot risky link patterns fast
+- export results for case notes
 
 Link Inspector keeps that flow fast inside the browser.
 
 ## Features
 
-- Extracts anchor links from the active page
-- Filters to HTTP(S) links only
-- Deduplicates links
-- Shows first and last observed links
-- Copy single link or copy all links
-- Export as `links.txt` or `links.csv`
+- Live badge on extension icon showing the current tab link count
+- Extracts unique links from the active page
+- Internal and external classification (external links highlighted)
+- Risky link highlighting for:
+  - insecure `http://` links
+  - non-web schemes such as `javascript:`, `data:`, `mailto:`, and similar
+- Summary panel with:
+  - total links
+  - internal links
+  - external links
+  - risky links
+  - unique domains
+- Filters:
+  - All
+  - Internal
+  - External
+  - Risky
+- Sorting:
+  - First seen
+  - Alphabetical
+  - Domain
+  - Path length
+- Copy single link or copy visible filtered list
+- Export visible filtered list as TXT or CSV
 - Local-only processing, no outbound telemetry
+
+## Threat patterns this helps identify
+
+- Suspicious external redirection chains hidden in content pages
+- Insecure HTTP links that can weaken trust or downgrade transport security
+- Non-web or script-style schemes that can signal malicious or unsafe link behaviour
+- Large link farms or unexpected domain spread on compromised or spammed pages
+- Potential phishing surface where external and risky links cluster together
 
 ## Chrome Web Store
 
@@ -64,6 +90,7 @@ Do not upload the repository root as the extension bundle.
 README.md
 src/
 ├── manifest.json
+├── background.js
 ├── popup.html
 ├── popup.js
 └── images/
@@ -72,8 +99,10 @@ src/
 
 ## Permissions
 
-- `activeTab`: read links from the active tab only
-- `scripting`: run extraction logic in the active tab context
+- `activeTab`: reads links from the active tab when requested
+- `scripting`: runs extraction/count logic in tab context
+- `tabs`: updates badge count when active tab changes
+- `host_permissions` (`<all_urls>`): enables badge link counting across standard web pages
 
 ## Security model
 
@@ -84,7 +113,7 @@ src/
 ## Troubleshooting
 
 - **No links found**: page may be script-rendered post-load or has no anchor tags.
-- **Extension fails on protected pages**: Chrome blocks script injection on some internal/system pages.
+- **Cannot run on protected pages**: Chrome blocks script injection on some internal/system pages.
 - **Store upload rejects package**: ensure `manifest.json` is at ZIP root, not nested.
 
 ## Licence
