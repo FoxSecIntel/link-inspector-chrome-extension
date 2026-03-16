@@ -44,6 +44,25 @@ Link Inspector keeps that flow fast inside the browser.
 - Export visible filtered list as TXT or CSV
 - Local-only processing, no outbound telemetry
 
+## Architecture
+
+```mermaid
+flowchart TD
+    A[Active browser tab] --> B[Background service worker]
+    B --> C[Badge updater: count links]
+    A --> D[Popup UI]
+    D --> E[Link extraction via scripting API]
+    E --> F[Classification engine]
+    F --> G[Internal vs external detection]
+    F --> H[Risky link detection]
+    G --> I[Filter and sort controls]
+    H --> I
+    I --> J[Copy visible links]
+    I --> K[Export TXT]
+    I --> L[Export CSV]
+    I --> M[Analyst triage view]
+```
+
 ## Threat patterns this helps identify
 
 - Suspicious external redirection chains hidden in content pages
