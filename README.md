@@ -44,6 +44,10 @@ Link Inspector keeps that flow fast inside the browser.
 - Export visible filtered list as TXT or CSV
 - Local-only processing, no outbound telemetry
 
+## Screenshot
+
+![Link Inspector summary and filtering view](docs/media/link-inspector-summary-view.jpg)
+
 ## Architecture
 
 ```mermaid
