@@ -139,6 +139,6 @@ src/
 - **Cannot run on protected pages**: Chrome blocks script injection on some internal/system pages.
 - **Store upload rejects package**: ensure `manifest.json` is at ZIP root, not nested.
 
-## Licence
+## License
 
 Apache License 2.0
