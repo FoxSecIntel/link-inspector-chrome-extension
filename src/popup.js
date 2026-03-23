@@ -106,18 +106,16 @@ function getSummary(linkObjs) {
 }
 
 function applyFilter(linkObjs, filterMode) {
-  const base = linkObjs.filter((l) => l.isRisky);
-
   if (filterMode === 'internal') {
-    return base.filter((l) => l.isHttpLike && !l.isExternal);
+    return linkObjs.filter((l) => l.isHttpLike && !l.isExternal);
   }
   if (filterMode === 'external') {
-    return base.filter((l) => l.isHttpLike && l.isExternal);
+    return linkObjs.filter((l) => l.isHttpLike && l.isExternal);
   }
   if (filterMode === 'risky') {
-    return base.filter((l) => l.isRisky);
+    return linkObjs.filter((l) => l.isRisky);
   }
-  return base;
+  return linkObjs;
 }
 
 function applySort(linkObjs, sortMode) {
