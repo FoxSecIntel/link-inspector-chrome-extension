@@ -110,20 +110,21 @@ function getSummary(linkObjs) {
 }
 
 function applyFilter(linkObjs, filterMode) {
+  // Canonical filter behaviour:
+  // - all: every URL
+  // - internal: all internal links
+  // - external: all external links
+  // - risky: only risky links
+  if (filterMode === 'internal') {
+    return linkObjs.filter((l) => l.isHttpLike && !l.isExternal);
+  }
+  if (filterMode === 'external') {
+    return linkObjs.filter((l) => l.isHttpLike && l.isExternal);
+  }
   if (filterMode === 'risky') {
     return linkObjs.filter((l) => l.isRisky);
   }
-
-  // Keep risky findings isolated to the Risky tab only.
-  const safeOnly = linkObjs.filter((l) => !l.isRisky);
-
-  if (filterMode === 'internal') {
-    return safeOnly.filter((l) => l.isHttpLike && !l.isExternal);
-  }
-  if (filterMode === 'external') {
-    return safeOnly.filter((l) => l.isHttpLike && l.isExternal);
-  }
-  return safeOnly;
+  return linkObjs;
 }
 
 function applySort(linkObjs, sortMode) {
