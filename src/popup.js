@@ -105,8 +105,8 @@ function getSummary(linkObjs) {
   };
 }
 
-function applyFilter(linkObjs, filterMode, viewAll) {
-  const base = viewAll ? linkObjs : linkObjs.filter((l) => l.isRisky);
+function applyFilter(linkObjs, filterMode) {
+  const base = linkObjs.filter((l) => l.isRisky);
 
   if (filterMode === 'internal') {
     return base.filter((l) => l.isHttpLike && !l.isExternal);
@@ -163,12 +163,12 @@ function renderSummary(summary) {
   `;
 }
 
-function renderLinks(linkObjs, pageHost, filterMode, sortMode, viewAll) {
+function renderLinks(linkObjs, pageHost, filterMode, sortMode) {
   const linkList = document.getElementById('linkList');
   const title = document.getElementById('title');
   linkList.innerHTML = '';
 
-  const filteredSorted = applySort(applyFilter(linkObjs, filterMode, viewAll), sortMode)
+  const filteredSorted = applySort(applyFilter(linkObjs, filterMode), sortMode)
     .sort((a, b) => Number(b.isRisky) - Number(a.isRisky));
   title.textContent = `Links on This Page (${filteredSorted.length} shown)`;
 
@@ -331,12 +331,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const linkObjs = links.map((l) => classifyLink(l, pageHost));
         let filterMode = 'all';
         let sortMode = 'first';
-        let viewAll = false;
         let visibleLinks = [];
 
         const rerender = () => {
           renderSummary(getSummary(linkObjs));
-          visibleLinks = renderLinks(linkObjs, pageHost, filterMode, sortMode, viewAll);
+          visibleLinks = renderLinks(linkObjs, pageHost, filterMode, sortMode);
           setActiveFilterButton(filterMode);
         };
 
@@ -354,15 +353,6 @@ document.addEventListener('DOMContentLoaded', () => {
           sortMode = sortSelect.value;
           rerender();
         });
-
-        const viewAllToggle = document.getElementById('viewAllToggle');
-        if (viewAllToggle) {
-          viewAllToggle.checked = false;
-          viewAllToggle.addEventListener('change', () => {
-            viewAll = !!viewAllToggle.checked;
-            rerender();
-          });
-        }
 
         rerender();
       },
