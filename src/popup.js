@@ -74,7 +74,7 @@ function classifyLink(link, pageHost) {
     riskExplanation = 'This link contains parameters that may leak your personal identity or active session credentials to external servers.';
   } else if (executablePattern.test(parsed.pathname) || executablePattern.test(rawUrl)) {
     isRisky = true;
-    riskLabel = 'High Priority: Security Risk';
+    riskLabel = 'High Priority: Downloadable Files';
     riskExplanation = 'This link leads to a direct download of an executable script or a sensitive configuration file which could compromise your system.';
   } else if (scheme === 'http') {
     isRisky = true;
@@ -401,25 +401,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let visibleLinks = [];
 
         const rerender = () => {
-          const titleEl = document.getElementById('title');
-          const summaryEl = document.getElementById('summary');
-          const mainControlsEl = document.getElementById('mainControls');
-          const filterControlsEl = document.getElementById('filterControls');
-          const linkListEl = document.getElementById('linkList');
-
-          if (filterMode === 'risky' && titleEl && linkListEl) {
-            titleEl.insertAdjacentElement('afterend', linkListEl);
-          } else if (filterControlsEl && linkListEl) {
-            filterControlsEl.insertAdjacentElement('afterend', linkListEl);
-          }
-
-          if (summaryEl) {
-            summaryEl.style.display = filterMode === 'risky' ? 'none' : 'grid';
-          }
-          if (mainControlsEl) {
-            mainControlsEl.style.display = filterMode === 'risky' ? 'none' : 'flex';
-          }
-
           renderSummary(getSummary(linkObjs));
           visibleLinks = renderLinks(linkObjs, pageHost, filterMode, sortMode);
           setActiveFilterButton(filterMode);
