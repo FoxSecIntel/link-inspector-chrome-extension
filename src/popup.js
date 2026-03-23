@@ -41,8 +41,9 @@ function classifyLink(link, pageHost) {
       host: '',
       isHttpLike: false,
       isExternal: false,
-      isRisky: true,
-      riskLabel: 'Invalid URL',
+      isRisky: false,
+      riskLabel: '',
+      riskExplanation: '',
     };
   }
 
@@ -57,13 +58,24 @@ function classifyLink(link, pageHost) {
 
   let isRisky = false;
   let riskLabel = '';
+  let riskExplanation = '';
 
-  if (scheme === 'http') {
+  const rawUrl = String(link || '');
+  const decodedUrl = (() => {
+    try { return decodeURIComponent(rawUrl); } catch { return rawUrl; }
+  })();
+
+  const piiLeakPattern = /(?:[?&#]|\b)(email|token|session|key|auth|apikey)\s*=/i;
+  const executablePattern = /\.(exe|msi|sh|bat|env|config|sql)(?:[?#]|$)/i;
+
+  if (piiLeakPattern.test(rawUrl) || piiLeakPattern.test(decodedUrl)) {
     isRisky = true;
-    riskLabel = 'Insecure HTTP';
-  } else if (!isHttpLike) {
+    riskLabel = 'High Priority: Data Exposure Risk';
+    riskExplanation = 'This link contains parameters that may leak your personal identity or active session credentials to external servers.';
+  } else if (executablePattern.test(parsed.pathname) || executablePattern.test(rawUrl)) {
     isRisky = true;
-    riskLabel = `Non-web scheme: ${scheme}`;
+    riskLabel = 'High Priority: Security Risk';
+    riskExplanation = 'This link leads to a direct download of an executable script or a sensitive configuration file which could compromise your system.';
   }
 
   return {
@@ -74,6 +86,7 @@ function classifyLink(link, pageHost) {
     isExternal,
     isRisky,
     riskLabel,
+    riskExplanation,
   };
 }
 
@@ -92,17 +105,19 @@ function getSummary(linkObjs) {
   };
 }
 
-function applyFilter(linkObjs, filterMode) {
+function applyFilter(linkObjs, filterMode, viewAll) {
+  const base = viewAll ? linkObjs : linkObjs.filter((l) => l.isRisky);
+
   if (filterMode === 'internal') {
-    return linkObjs.filter((l) => l.isHttpLike && !l.isExternal);
+    return base.filter((l) => l.isHttpLike && !l.isExternal);
   }
   if (filterMode === 'external') {
-    return linkObjs.filter((l) => l.isHttpLike && l.isExternal);
+    return base.filter((l) => l.isHttpLike && l.isExternal);
   }
   if (filterMode === 'risky') {
-    return linkObjs.filter((l) => l.isRisky);
+    return base.filter((l) => l.isRisky);
   }
-  return linkObjs;
+  return base;
 }
 
 function applySort(linkObjs, sortMode) {
@@ -148,12 +163,13 @@ function renderSummary(summary) {
   `;
 }
 
-function renderLinks(linkObjs, pageHost, filterMode, sortMode) {
+function renderLinks(linkObjs, pageHost, filterMode, sortMode, viewAll) {
   const linkList = document.getElementById('linkList');
   const title = document.getElementById('title');
   linkList.innerHTML = '';
 
-  const filteredSorted = applySort(applyFilter(linkObjs, filterMode), sortMode);
+  const filteredSorted = applySort(applyFilter(linkObjs, filterMode, viewAll), sortMode)
+    .sort((a, b) => Number(b.isRisky) - Number(a.isRisky));
   title.textContent = `Links on This Page (${filteredSorted.length} shown)`;
 
   if (filteredSorted.length === 0) {
@@ -174,7 +190,27 @@ function renderLinks(linkObjs, pageHost, filterMode, sortMode) {
 
   const fragment = document.createDocumentFragment();
 
-  filteredSorted.forEach((linkObj) => {
+  const riskyItems = filteredSorted.filter((l) => l.isRisky);
+  const safeItems = filteredSorted.filter((l) => !l.isRisky);
+
+  if (riskyItems.length > 0) {
+    const riskyHeading = document.createElement('div');
+    riskyHeading.className = 'bucket-heading risky-heading';
+    riskyHeading.textContent = `Risky (${riskyItems.length})`;
+    fragment.appendChild(riskyHeading);
+  }
+
+  const orderedItems = [...riskyItems, ...safeItems];
+  let safeHeadingAdded = false;
+
+  orderedItems.forEach((linkObj) => {
+    if (!linkObj.isRisky && riskyItems.length > 0 && !safeHeadingAdded) {
+      const safeHeading = document.createElement('div');
+      safeHeading.className = 'bucket-heading';
+      safeHeading.textContent = `Other links (${safeItems.length})`;
+      fragment.appendChild(safeHeading);
+      safeHeadingAdded = true;
+    }
     const li = document.createElement('li');
 
     if (linkObj.isExternal) li.classList.add('external-link');
@@ -211,7 +247,17 @@ function renderLinks(linkObjs, pageHost, filterMode, sortMode) {
       const risk = document.createElement('div');
       risk.className = 'risk-note';
       risk.textContent = `⚠ ${linkObj.riskLabel}`;
+      if (linkObj.riskExplanation) {
+        risk.title = linkObj.riskExplanation;
+      }
       li.appendChild(risk);
+
+      if (linkObj.riskExplanation) {
+        const riskSub = document.createElement('div');
+        riskSub.className = 'risk-subtext';
+        riskSub.textContent = linkObj.riskExplanation;
+        li.appendChild(riskSub);
+      }
     }
 
     fragment.appendChild(li);
@@ -285,11 +331,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const linkObjs = links.map((l) => classifyLink(l, pageHost));
         let filterMode = 'all';
         let sortMode = 'first';
+        let viewAll = false;
         let visibleLinks = [];
 
         const rerender = () => {
           renderSummary(getSummary(linkObjs));
-          visibleLinks = renderLinks(linkObjs, pageHost, filterMode, sortMode);
+          visibleLinks = renderLinks(linkObjs, pageHost, filterMode, sortMode, viewAll);
           setActiveFilterButton(filterMode);
         };
 
@@ -307,6 +354,15 @@ document.addEventListener('DOMContentLoaded', () => {
           sortMode = sortSelect.value;
           rerender();
         });
+
+        const viewAllToggle = document.getElementById('viewAllToggle');
+        if (viewAllToggle) {
+          viewAllToggle.checked = false;
+          viewAllToggle.addEventListener('change', () => {
+            viewAll = !!viewAllToggle.checked;
+            rerender();
+          });
+        }
 
         rerender();
       },

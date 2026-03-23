@@ -123,10 +123,31 @@
       border-color: #ffc7c7;
     }
 
+    .bucket-heading {
+      margin: 8px 0 6px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #666;
+      font-weight: 700;
+    }
+
+    .risky-heading {
+      color: #ef4444;
+    }
+
     .risk-note {
       margin-top: 6px;
       font-size: 11px;
-      color: #a10000;
+      color: #ef4444;
+      font-weight: 700;
+    }
+
+    .risk-subtext {
+      margin-top: 4px;
+      font-size: 11px;
+      color: #7a1e1e;
+      line-height: 1.35;
     }
 
     .meta {
@@ -160,6 +181,10 @@
     <button data-filter="internal">Internal</button>
     <button data-filter="external">External</button>
     <button data-filter="risky">Risky</button>
+
+    <label for="viewAllToggle" class="sort-label">
+      <input id="viewAllToggle" type="checkbox" /> View all
+    </label>
 
     <label for="sortMode" class="sort-label">Sort:</label>
     <select id="sortMode">
