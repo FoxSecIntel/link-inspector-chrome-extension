@@ -110,16 +110,20 @@ function getSummary(linkObjs) {
 }
 
 function applyFilter(linkObjs, filterMode) {
-  if (filterMode === 'internal') {
-    return linkObjs.filter((l) => l.isHttpLike && !l.isExternal);
-  }
-  if (filterMode === 'external') {
-    return linkObjs.filter((l) => l.isHttpLike && l.isExternal);
-  }
   if (filterMode === 'risky') {
     return linkObjs.filter((l) => l.isRisky);
   }
-  return linkObjs;
+
+  // Keep risky findings isolated to the Risky tab only.
+  const safeOnly = linkObjs.filter((l) => !l.isRisky);
+
+  if (filterMode === 'internal') {
+    return safeOnly.filter((l) => l.isHttpLike && !l.isExternal);
+  }
+  if (filterMode === 'external') {
+    return safeOnly.filter((l) => l.isHttpLike && l.isExternal);
+  }
+  return safeOnly;
 }
 
 function applySort(linkObjs, sortMode) {
