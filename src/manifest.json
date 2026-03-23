@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Link Inspector",
-  "version": "1.1.18",
+  "version": "1.1.19",
   "description": "Extract, review, copy, and export unique links from the current webpage.",
   "permissions": [
     "scripting",

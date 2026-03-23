@@ -76,6 +76,10 @@ function classifyLink(link, pageHost) {
     isRisky = true;
     riskLabel = 'High Priority: Security Risk';
     riskExplanation = 'This link leads to a direct download of an executable script or a sensitive configuration file which could compromise your system.';
+  } else if (scheme === 'http') {
+    isRisky = true;
+    riskLabel = 'Technical Debt: Insecure HTTP';
+    riskExplanation = 'This link uses HTTP instead of HTTPS, which increases interception and tampering risk on untrusted networks.';
   }
 
   return {
