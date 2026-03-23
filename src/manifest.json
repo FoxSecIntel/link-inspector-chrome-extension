@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Link Inspector",
-  "version": "1.1.14",
-  "description": "Extract, review, copy, and export unique links from the current webpage.",
+  "name": "Link Inspector – Extract & Analyse URLs",
+  "version": "1.1.15",
+  "description": "Extract, filter, copy, and export unique links from any webpage. Review internal, external, and risky URLs fast for research",
   "permissions": [
     "scripting",
     "activeTab",

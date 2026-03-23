@@ -118,15 +118,24 @@
       background: #fff;
     }
 
-    li.risky-link {
+    li.risky-link-catastrophic {
       background: #ffecec;
       border-color: #ffc7c7;
+    }
+
+    li.risky-link-technical {
+      background: #fff9e8;
+      border-color: #ffe3a3;
     }
 
     .risk-note {
       margin-top: 6px;
       font-size: 11px;
       color: #a10000;
+    }
+
+    .risk-note.detail {
+      color: #7a5d00;
     }
 
     .meta {
@@ -157,9 +166,15 @@
 
   <div class="controls filter-controls">
     <button data-filter="all" class="active-filter">All</button>
+    <button data-filter="catastrophic">Catastrophic</button>
+    <button data-filter="technical">Technical debt</button>
+    <button data-filter="risky">Risky</button>
     <button data-filter="internal">Internal</button>
     <button data-filter="external">External</button>
-    <button data-filter="risky">Risky</button>
+
+    <label for="viewAllToggle" class="sort-label">
+      <input id="viewAllToggle" type="checkbox" /> View all (include safe)
+    </label>
 
     <label for="sortMode" class="sort-label">Sort:</label>
     <select id="sortMode">
