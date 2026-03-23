@@ -70,15 +70,15 @@ function classifyLink(link, pageHost) {
 
   if (piiLeakPattern.test(rawUrl) || piiLeakPattern.test(decodedUrl)) {
     isRisky = true;
-    riskLabel = 'High Priority: Data Exposure Risk';
+    riskLabel = 'PII Exposure';
     riskExplanation = 'This link contains parameters that may leak your personal identity or active session credentials to external servers.';
   } else if (executablePattern.test(parsed.pathname) || executablePattern.test(rawUrl)) {
     isRisky = true;
-    riskLabel = 'High Priority: Downloadable Files';
+    riskLabel = 'Downloadable Files';
     riskExplanation = 'This link leads to a direct download of an executable script or a sensitive configuration file which could compromise your system.';
   } else if (scheme === 'http') {
     isRisky = true;
-    riskLabel = 'Technical Debt: Insecure HTTP';
+    riskLabel = 'Insecure HTTP';
     riskExplanation = 'This link uses HTTP instead of HTTPS, which increases interception and tampering risk on untrusted networks.';
   }
 
@@ -215,9 +215,9 @@ function renderRiskyGrouped(linkList, riskyLinks) {
   Array.from(groups.values()).forEach((group, idx) => {
     const details = document.createElement('details');
     details.className = 'risk-group';
-    details.open = idx === 0;
+    details.open = true;
 
-    const isTechnical = /technical debt/i.test(group.label);
+    const isTechnical = /insecure http/i.test(group.label);
 
     const summary = document.createElement('summary');
     summary.className = `risk-summary ${isTechnical ? 'risk-summary-technical' : 'risk-summary-catastrophic'}`;
