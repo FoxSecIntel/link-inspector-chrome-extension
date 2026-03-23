@@ -89,18 +89,28 @@
     }
 
     .link-text {
-      word-break: break-all;
       color: #0b63c4;
       text-decoration: none;
       flex: 1;
       font-size: 12px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      min-width: 0;
     }
 
     .copy-btn {
-      min-width: 52px;
+      min-width: 28px;
+      width: 28px;
+      height: 24px;
       background: #444;
-      font-size: 11px;
-      padding: 4px 6px;
+      font-size: 12px;
+      line-height: 1;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 5px;
     }
 
     .copy-btn:hover { background: #222; }
@@ -136,45 +146,94 @@
       color: #ef4444;
     }
 
-    .risk-wrap {
-      margin-top: 8px;
+    .risk-groups {
       display: grid;
-      gap: 5px;
+      gap: 8px;
+      margin-top: 4px;
     }
 
-    .risk-chip {
+    .risk-group {
+      border: 1px solid #1f2937;
+      border-radius: 8px;
+      background: #0b0e14;
+      overflow: hidden;
+    }
+
+    .risk-summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 7px 9px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .risk-summary::-webkit-details-marker { display: none; }
+
+    .risk-summary-left {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow: hidden;
+    }
+
+    .risk-summary-label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .risk-summary-catastrophic { color: #ef4444; }
+    .risk-summary-technical { color: #f59e0b; }
+
+    .info-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
       display: inline-flex;
       align-items: center;
-      width: fit-content;
-      max-width: 100%;
-      border-radius: 999px;
-      padding: 3px 8px;
-      font-size: 11px;
+      justify-content: center;
+      font-size: 10px;
       font-weight: 700;
-      line-height: 1.2;
+      border: 1px solid currentColor;
+      opacity: 0.9;
+      flex: 0 0 auto;
     }
 
-    .risk-chip-catastrophic {
-      background: #fde8e8;
-      color: #9b1c1c;
-      border: 1px solid #f8b4b4;
+    .risk-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      border-top: 1px solid #1f2937;
     }
 
-    .risk-chip-technical {
-      background: #fff8e1;
-      color: #8a5a00;
-      border: 1px solid #ffe08a;
+    .risk-row {
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 0 8px;
+      border-bottom: 1px solid #141b26;
+      color: #dbe7f5;
     }
 
-    .risk-explainer {
-      font-size: 11px;
-      color: #445066;
-      line-height: 1.35;
-      max-height: 2.7em;
+    .risk-row:last-child { border-bottom: 0; }
+    .risk-row:hover { background: #141b26; }
+
+    .risk-url {
+      color: #bcd3f5;
+      text-decoration: none;
+      min-width: 0;
       overflow: hidden;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 12px;
+      line-height: 1;
     }
 
     .meta {
@@ -197,13 +256,13 @@
 
   <div id="summary" class="summary"></div>
 
-  <div class="controls">
+  <div id="mainControls" class="controls">
     <button id="copyAllBtn">Copy Visible</button>
     <button id="exportTxtBtn">Export TXT</button>
     <button id="exportCsvBtn">Export CSV</button>
   </div>
 
-  <div class="controls filter-controls">
+  <div id="filterControls" class="controls filter-controls">
     <button data-filter="all" class="active-filter">All</button>
     <button data-filter="internal">Internal</button>
     <button data-filter="external">External</button>

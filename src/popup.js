@@ -170,6 +170,106 @@ function renderSummary(summary) {
   `;
 }
 
+function makeCopyIconButton(url) {
+  const btn = document.createElement('button');
+  btn.className = 'copy-btn';
+  btn.type = 'button';
+  btn.textContent = '⧉';
+  btn.title = 'Copy URL';
+  btn.setAttribute('aria-label', `Copy ${url}`);
+  btn.addEventListener('click', async (ev) => {
+    ev.preventDefault();
+    try {
+      await navigator.clipboard.writeText(url);
+      btn.textContent = '✓';
+      btn.title = 'Copied!';
+      setTimeout(() => {
+        btn.textContent = '⧉';
+        btn.title = 'Copy URL';
+      }, 700);
+    } catch (_) {
+      btn.textContent = '!';
+      btn.title = 'Copy failed';
+      setTimeout(() => {
+        btn.textContent = '⧉';
+        btn.title = 'Copy URL';
+      }, 700);
+    }
+  });
+  return btn;
+}
+
+function renderRiskyGrouped(linkList, riskyLinks) {
+  const groups = new Map();
+  riskyLinks.forEach((l) => {
+    const key = l.riskLabel || 'Risky';
+    if (!groups.has(key)) {
+      groups.set(key, { label: key, explanation: l.riskExplanation || '', items: [] });
+    }
+    groups.get(key).items.push(l);
+  });
+
+  const holder = document.createElement('div');
+  holder.className = 'risk-groups';
+
+  Array.from(groups.values()).forEach((group, idx) => {
+    const details = document.createElement('details');
+    details.className = 'risk-group';
+    details.open = idx === 0;
+
+    const isTechnical = /technical debt/i.test(group.label);
+
+    const summary = document.createElement('summary');
+    summary.className = `risk-summary ${isTechnical ? 'risk-summary-technical' : 'risk-summary-catastrophic'}`;
+
+    const left = document.createElement('div');
+    left.className = 'risk-summary-left';
+
+    const label = document.createElement('span');
+    label.className = 'risk-summary-label';
+    label.textContent = `${group.label} (${group.items.length})`;
+
+    left.appendChild(label);
+
+    if (group.explanation) {
+      const info = document.createElement('span');
+      info.className = 'info-dot';
+      info.textContent = 'i';
+      info.title = group.explanation;
+      left.appendChild(info);
+    }
+
+    summary.appendChild(left);
+    details.appendChild(summary);
+
+    const list = document.createElement('ul');
+    list.className = 'risk-list';
+
+    group.items.forEach((linkObj) => {
+      const li = document.createElement('li');
+      li.className = 'risk-row';
+
+      const a = document.createElement('a');
+      a.className = 'risk-url';
+      a.href = linkObj.url;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.textContent = linkObj.url;
+      a.title = linkObj.url;
+
+      const copyBtn = makeCopyIconButton(linkObj.url);
+      li.appendChild(a);
+      li.appendChild(copyBtn);
+      list.appendChild(li);
+    });
+
+    details.appendChild(list);
+    holder.appendChild(details);
+  });
+
+  linkList.appendChild(holder);
+}
+
 function renderLinks(linkObjs, pageHost, filterMode, sortMode) {
   const linkList = document.getElementById('linkList');
   const title = document.getElementById('title');
@@ -186,30 +286,31 @@ function renderLinks(linkObjs, pageHost, filterMode, sortMode) {
     return filteredSorted;
   }
 
-  const first = filteredSorted[0]?.url;
-  const last = filteredSorted[filteredSorted.length - 1]?.url;
-
-  const meta = document.createElement('div');
-  meta.className = 'meta';
-  meta.textContent = `First: ${first}\nLast: ${last}`;
-  linkList.appendChild(meta);
-
-  const fragment = document.createDocumentFragment();
-
   const showRiskDecorations = filterMode === 'risky';
+
+  if (!showRiskDecorations) {
+    const first = filteredSorted[0]?.url;
+    const last = filteredSorted[filteredSorted.length - 1]?.url;
+
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    meta.textContent = `First: ${first}\nLast: ${last}`;
+    linkList.appendChild(meta);
+  }
 
   if (showRiskDecorations) {
     const riskyHeading = document.createElement('div');
     riskyHeading.className = 'bucket-heading risky-heading';
     riskyHeading.textContent = `Risky (${filteredSorted.length})`;
-    fragment.appendChild(riskyHeading);
+    linkList.appendChild(riskyHeading);
+    renderRiskyGrouped(linkList, filteredSorted);
+    return filteredSorted;
   }
 
+  const fragment = document.createDocumentFragment();
   filteredSorted.forEach((linkObj) => {
     const li = document.createElement('li');
-
     if (linkObj.isExternal) li.classList.add('external-link');
-    if (showRiskDecorations && linkObj.isRisky) li.classList.add('risky-link');
 
     const row = document.createElement('div');
     row.className = 'row';
@@ -221,42 +322,11 @@ function renderLinks(linkObjs, pageHost, filterMode, sortMode) {
     a.rel = 'noopener noreferrer';
     a.textContent = linkObj.url;
 
-    const btn = document.createElement('button');
-    btn.className = 'copy-btn';
-    btn.type = 'button';
-    btn.textContent = 'Copy';
-    btn.setAttribute('aria-label', `Copy ${linkObj.url}`);
-    btn.addEventListener('click', async () => {
-      try {
-        await navigator.clipboard.writeText(linkObj.url);
-      } catch (err) {
-        console.error('Clipboard copy failed:', err);
-      }
-    });
+    const btn = makeCopyIconButton(linkObj.url);
 
     row.appendChild(a);
     row.appendChild(btn);
     li.appendChild(row);
-
-    if (showRiskDecorations && linkObj.isRisky) {
-      const riskWrap = document.createElement('div');
-      riskWrap.className = 'risk-wrap';
-
-      const chip = document.createElement('span');
-      chip.className = `risk-chip ${String(linkObj.riskLabel || '').toLowerCase().includes('technical debt') ? 'risk-chip-technical' : 'risk-chip-catastrophic'}`;
-      chip.textContent = linkObj.riskLabel || 'Risk flagged';
-      if (linkObj.riskExplanation) chip.title = linkObj.riskExplanation;
-
-      const explainer = document.createElement('div');
-      explainer.className = 'risk-explainer';
-      explainer.textContent = linkObj.riskExplanation || '';
-      if (linkObj.riskExplanation) explainer.title = linkObj.riskExplanation;
-
-      riskWrap.appendChild(chip);
-      if (linkObj.riskExplanation) riskWrap.appendChild(explainer);
-      li.appendChild(riskWrap);
-    }
-
     fragment.appendChild(li);
   });
 
@@ -331,6 +401,25 @@ document.addEventListener('DOMContentLoaded', () => {
         let visibleLinks = [];
 
         const rerender = () => {
+          const titleEl = document.getElementById('title');
+          const summaryEl = document.getElementById('summary');
+          const mainControlsEl = document.getElementById('mainControls');
+          const filterControlsEl = document.getElementById('filterControls');
+          const linkListEl = document.getElementById('linkList');
+
+          if (filterMode === 'risky' && titleEl && linkListEl) {
+            titleEl.insertAdjacentElement('afterend', linkListEl);
+          } else if (filterControlsEl && linkListEl) {
+            filterControlsEl.insertAdjacentElement('afterend', linkListEl);
+          }
+
+          if (summaryEl) {
+            summaryEl.style.display = filterMode === 'risky' ? 'none' : 'grid';
+          }
+          if (mainControlsEl) {
+            mainControlsEl.style.display = filterMode === 'risky' ? 'none' : 'flex';
+          }
+
           renderSummary(getSummary(linkObjs));
           visibleLinks = renderLinks(linkObjs, pageHost, filterMode, sortMode);
           setActiveFilterButton(filterMode);
