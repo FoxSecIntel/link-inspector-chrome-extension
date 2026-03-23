@@ -175,8 +175,7 @@ function renderLinks(linkObjs, pageHost, filterMode, sortMode) {
   const title = document.getElementById('title');
   linkList.innerHTML = '';
 
-  const filteredSorted = applySort(applyFilter(linkObjs, filterMode), sortMode)
-    .sort((a, b) => Number(b.isRisky) - Number(a.isRisky));
+  const filteredSorted = applySort(applyFilter(linkObjs, filterMode), sortMode);
   title.textContent = `Links on This Page (${filteredSorted.length} shown)`;
 
   if (filteredSorted.length === 0) {
@@ -197,31 +196,20 @@ function renderLinks(linkObjs, pageHost, filterMode, sortMode) {
 
   const fragment = document.createDocumentFragment();
 
-  const riskyItems = filteredSorted.filter((l) => l.isRisky);
-  const safeItems = filteredSorted.filter((l) => !l.isRisky);
+  const showRiskDecorations = filterMode === 'risky';
 
-  if (riskyItems.length > 0) {
+  if (showRiskDecorations) {
     const riskyHeading = document.createElement('div');
     riskyHeading.className = 'bucket-heading risky-heading';
-    riskyHeading.textContent = `Risky (${riskyItems.length})`;
+    riskyHeading.textContent = `Risky (${filteredSorted.length})`;
     fragment.appendChild(riskyHeading);
   }
 
-  const orderedItems = [...riskyItems, ...safeItems];
-  let safeHeadingAdded = false;
-
-  orderedItems.forEach((linkObj) => {
-    if (!linkObj.isRisky && riskyItems.length > 0 && !safeHeadingAdded) {
-      const safeHeading = document.createElement('div');
-      safeHeading.className = 'bucket-heading';
-      safeHeading.textContent = `Other links (${safeItems.length})`;
-      fragment.appendChild(safeHeading);
-      safeHeadingAdded = true;
-    }
+  filteredSorted.forEach((linkObj) => {
     const li = document.createElement('li');
 
     if (linkObj.isExternal) li.classList.add('external-link');
-    if (linkObj.isRisky) li.classList.add('risky-link');
+    if (showRiskDecorations && linkObj.isRisky) li.classList.add('risky-link');
 
     const row = document.createElement('div');
     row.className = 'row';
@@ -250,7 +238,7 @@ function renderLinks(linkObjs, pageHost, filterMode, sortMode) {
     row.appendChild(btn);
     li.appendChild(row);
 
-    if (linkObj.isRisky) {
+    if (showRiskDecorations && linkObj.isRisky) {
       const riskWrap = document.createElement('div');
       riskWrap.className = 'risk-wrap';
 
