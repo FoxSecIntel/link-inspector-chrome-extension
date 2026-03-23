@@ -250,20 +250,22 @@ function renderLinks(linkObjs, pageHost, filterMode, sortMode) {
     li.appendChild(row);
 
     if (linkObj.isRisky) {
-      const risk = document.createElement('div');
-      risk.className = 'risk-note';
-      risk.textContent = `⚠ ${linkObj.riskLabel}`;
-      if (linkObj.riskExplanation) {
-        risk.title = linkObj.riskExplanation;
-      }
-      li.appendChild(risk);
+      const riskWrap = document.createElement('div');
+      riskWrap.className = 'risk-wrap';
 
-      if (linkObj.riskExplanation) {
-        const riskSub = document.createElement('div');
-        riskSub.className = 'risk-subtext';
-        riskSub.textContent = linkObj.riskExplanation;
-        li.appendChild(riskSub);
-      }
+      const chip = document.createElement('span');
+      chip.className = `risk-chip ${String(linkObj.riskLabel || '').toLowerCase().includes('technical debt') ? 'risk-chip-technical' : 'risk-chip-catastrophic'}`;
+      chip.textContent = linkObj.riskLabel || 'Risk flagged';
+      if (linkObj.riskExplanation) chip.title = linkObj.riskExplanation;
+
+      const explainer = document.createElement('div');
+      explainer.className = 'risk-explainer';
+      explainer.textContent = linkObj.riskExplanation || '';
+      if (linkObj.riskExplanation) explainer.title = linkObj.riskExplanation;
+
+      riskWrap.appendChild(chip);
+      if (linkObj.riskExplanation) riskWrap.appendChild(explainer);
+      li.appendChild(riskWrap);
     }
 
     fragment.appendChild(li);

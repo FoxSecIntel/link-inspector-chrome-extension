@@ -119,8 +119,8 @@
     }
 
     li.risky-link {
-      background: #ffecec;
-      border-color: #ffc7c7;
+      background: #fff;
+      border-color: #e6e6e6;
     }
 
     .bucket-heading {
@@ -136,18 +136,45 @@
       color: #ef4444;
     }
 
-    .risk-note {
-      margin-top: 6px;
-      font-size: 11px;
-      color: #ef4444;
-      font-weight: 700;
+    .risk-wrap {
+      margin-top: 8px;
+      display: grid;
+      gap: 5px;
     }
 
-    .risk-subtext {
-      margin-top: 4px;
+    .risk-chip {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      max-width: 100%;
+      border-radius: 999px;
+      padding: 3px 8px;
       font-size: 11px;
-      color: #7a1e1e;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .risk-chip-catastrophic {
+      background: #fde8e8;
+      color: #9b1c1c;
+      border: 1px solid #f8b4b4;
+    }
+
+    .risk-chip-technical {
+      background: #fff8e1;
+      color: #8a5a00;
+      border: 1px solid #ffe08a;
+    }
+
+    .risk-explainer {
+      font-size: 11px;
+      color: #445066;
       line-height: 1.35;
+      max-height: 2.7em;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
     }
 
     .meta {
