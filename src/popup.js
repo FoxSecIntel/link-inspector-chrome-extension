@@ -1,13 +1,29 @@
 function extractLinks() {
-  const raw = Array.from(document.querySelectorAll('a'))
-    .map((a) => (a.href || '').trim())
-    .filter(Boolean);
+  // Hard cap to keep popup responsive on very large pages.
+  const MAX_COLLECT = 2500;
+  const seen = new Set();
+  const out = [];
 
-  return Array.from(new Set(raw));
+  const anchors = document.querySelectorAll('a');
+  for (let i = 0; i < anchors.length && out.length < MAX_COLLECT; i += 1) {
+    const href = (anchors[i].href || '').trim();
+    if (!href) continue;
+    if (seen.has(href)) continue;
+    seen.add(href);
+    out.push(href);
+  }
+
+  return out;
 }
 
 function escapeCsv(value) {
-  const v = String(value ?? '');
+  let v = String(value ?? '');
+
+  // Prevent CSV formula injection in spreadsheet tools.
+  if (/^[=+\-@]/.test(v)) {
+    v = `'${v}`;
+  }
+
   if (/[",\n]/.test(v)) {
     return `"${v.replace(/"/g, '""')}"`;
   }
@@ -28,6 +44,32 @@ function download(filename, content, mimeType) {
 
 function normaliseHost(host) {
   return String(host || '').toLowerCase().replace(/^www\./, '');
+}
+
+function isSafeNavigableUrl(url) {
+  try {
+    const u = new URL(url);
+    return u.protocol === 'http:' || u.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+function applySafeLinkBehaviour(anchor, url) {
+  if (isSafeNavigableUrl(url)) {
+    anchor.href = url;
+    anchor.target = '_blank';
+    anchor.rel = 'noopener noreferrer';
+    anchor.title = url;
+    return;
+  }
+
+  // Non-web schemes are shown but not directly navigable from popup.
+  anchor.removeAttribute('href');
+  anchor.setAttribute('role', 'link');
+  anchor.setAttribute('aria-disabled', 'true');
+  anchor.classList.add('unsafe-link');
+  anchor.title = `${url}\nNavigation disabled for non-web scheme. Use copy if needed.`;
 }
 
 function classifyLink(link, pageHost) {
@@ -251,11 +293,8 @@ function renderRiskyGrouped(linkList, riskyLinks) {
 
       const a = document.createElement('a');
       a.className = 'risk-url';
-      a.href = linkObj.url;
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
       a.textContent = linkObj.url;
-      a.title = linkObj.url;
+      applySafeLinkBehaviour(a, linkObj.url);
 
       const copyBtn = makeCopyIconButton(linkObj.url);
       li.appendChild(a);
@@ -276,9 +315,13 @@ function renderLinks(linkObjs, pageHost, filterMode, sortMode) {
   linkList.innerHTML = '';
 
   const filteredSorted = applySort(applyFilter(linkObjs, filterMode), sortMode);
-  title.textContent = `Links on This Page (${filteredSorted.length} shown)`;
+  const MAX_RENDER = 500;
+  const visibleSet = filteredSorted.slice(0, MAX_RENDER);
+  const truncated = filteredSorted.length > MAX_RENDER;
 
-  if (filteredSorted.length === 0) {
+  title.textContent = `Links on This Page (${visibleSet.length} shown${truncated ? ` of ${filteredSorted.length}` : ''})`;
+
+  if (visibleSet.length === 0) {
     const div = document.createElement('div');
     div.className = 'empty';
     div.textContent = 'No links match the current filter.';
@@ -289,26 +332,26 @@ function renderLinks(linkObjs, pageHost, filterMode, sortMode) {
   const showRiskDecorations = filterMode === 'risky';
 
   if (!showRiskDecorations) {
-    const first = filteredSorted[0]?.url;
-    const last = filteredSorted[filteredSorted.length - 1]?.url;
+    const first = visibleSet[0]?.url;
+    const last = visibleSet[visibleSet.length - 1]?.url;
 
     const meta = document.createElement('div');
     meta.className = 'meta';
-    meta.textContent = `First: ${first}\nLast: ${last}`;
+    meta.textContent = `First: ${first}\nLast: ${last}${truncated ? `\nShowing first ${MAX_RENDER} for performance.` : ''}`;
     linkList.appendChild(meta);
   }
 
   if (showRiskDecorations) {
     const riskyHeading = document.createElement('div');
     riskyHeading.className = 'bucket-heading risky-heading';
-    riskyHeading.textContent = `Risky (${filteredSorted.length})`;
+    riskyHeading.textContent = `Risky (${visibleSet.length}${truncated ? ` of ${filteredSorted.length}` : ''})`;
     linkList.appendChild(riskyHeading);
-    renderRiskyGrouped(linkList, filteredSorted);
-    return filteredSorted;
+    renderRiskyGrouped(linkList, visibleSet);
+    return visibleSet;
   }
 
   const fragment = document.createDocumentFragment();
-  filteredSorted.forEach((linkObj) => {
+  visibleSet.forEach((linkObj) => {
     const li = document.createElement('li');
     if (linkObj.isExternal) li.classList.add('external-link');
 
@@ -317,10 +360,8 @@ function renderLinks(linkObjs, pageHost, filterMode, sortMode) {
 
     const a = document.createElement('a');
     a.className = 'link-text';
-    a.href = linkObj.url;
-    a.target = '_blank';
-    a.rel = 'noopener noreferrer';
     a.textContent = linkObj.url;
+    applySafeLinkBehaviour(a, linkObj.url);
 
     const btn = makeCopyIconButton(linkObj.url);
 
@@ -331,7 +372,7 @@ function renderLinks(linkObjs, pageHost, filterMode, sortMode) {
   });
 
   linkList.appendChild(fragment);
-  return filteredSorted;
+  return visibleSet;
 }
 
 function setupExportButtons(getVisibleLinks) {
